@@ -31,3 +31,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ── Terraform artifacts ───────────────────────────────
+.terraform/          # provider plugins & init cache
+*.tfstate            # state files
+*.tfstate.*          # state backups
+crash.log
+*.tfvars             # sensitive variable files
+# override files that should never be checked in
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
