@@ -33,7 +33,9 @@ public class BookController {
     @PostMapping
     public ResponseEntity<Book> createBook(@Valid @RequestBody Book book) {
         Book createdBook = bookService.createBook(book);
-        return new ResponseEntity<>(createdBook, HttpStatus.CREATED);
+        // Set Location header to /api/books/{id}
+        return ResponseEntity.created(java.net.URI.create("/api/books/" + createdBook.getId()))
+                .body(createdBook);
     }
 
     @PatchMapping("/{id}")
