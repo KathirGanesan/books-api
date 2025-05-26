@@ -76,16 +76,9 @@ rm -f /etc/nginx/sites-enabled/default
 nginx -t
 systemctl restart nginx
 
-###############################################################################
-# 3. UFW (optional – open only HTTP/HTTPS)
-###############################################################################
-ufw --force reset
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw --force enable
 
 ###############################################################################
-# 4. CloudWatch agent (unchanged)
+# 3. CloudWatch agent (unchanged)
 ###############################################################################
 cd /tmp
 wget -q https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
