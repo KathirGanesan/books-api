@@ -1,86 +1,174 @@
-# Books API
+# 📚 Books API
 
-This is a Spring Boot REST API application that manages a collection of books. It provides endpoints for creating, retrieving, updating, and deleting books, along with basic input validation and error handling.
+A RESTful API built with **Spring Boot 3**, designed for managing book data with basic CRUD (Create, Read, Update, Delete) operations. This project uses in-memory storage for demonstration and learning purposes.
 
-## Features
+## 🚀 Features
 
-- In-memory storage for books
-- Basic input validation
-- Error handling with custom exceptions
-- Health check endpoint
+* **CRUD Operations**: Easily manage books (Create, Read, Update, Delete).
+* **Validation**: Ensures required fields (title, author) are provided.
+* **Structured Error Handling**: Provides clear JSON responses on validation errors or exceptions.
+* **Logging**: Structured and leveled logging for easy debugging.
+* **Swagger Documentation**: API documented with OpenAPI (Swagger UI).
+* **Health Check**: Endpoint to verify API health.
 
-## Project Structure
+## 🛠️ Tech Stack
+
+* Java 17
+* Spring Boot 3.2.5
+* Lombok
+* SpringDoc OpenAPI (Swagger)
+* JUnit 5 & Mockito for Testing
+* Maven
+* AWS EC2 (Infrastructure as Code using Terraform)
+* AWS CloudWatch for monitoring and logging
+
+## 📦 Project Structure
 
 ```
 books-api
 ├── src
 │   ├── main
 │   │   ├── java
-│   │   │   └── com
-│   │   │       └── booksapi
-│   │   │           └── books_api
-│   │   │               ├── BooksApiApplication.java
-│   │   │               ├── controller
-│   │   │               │   └── BookController.java
-│   │   │               ├── model
-│   │   │               │   └── Book.java
-│   │   │               ├── service
-│   │   │               │   └── BookService.java
-│   │   │               └── exception
-│   │   │                   ├── BookNotFoundException.java
-│   │   │                   └── GlobalExceptionHandler.java
+│   │   │   └── com.booksapi.books_api
+│   │   │       ├── controller
+│   │   │       │   └── BookController.java
+│   │   │       ├── exception
+│   │   │       │   ├── BookNotFoundException.java
+│   │   │       │   └── GlobalExceptionHandler.java
+│   │   │       ├── model
+│   │   │       │   └── Book.java
+│   │   │       ├── service
+│   │   │       │   └── BookService.java
+│   │   │       └── BooksApiApplication.java
 │   │   └── resources
 │   │       └── application.properties
+│   └── test
+│       └── java
+│           └── com.booksapi.books_api
+│               └── controller
+│                   └── BookControllerMvcTest.java
+├── terraform
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── terraform.tfvars.example
 ├── pom.xml
+├── deploy.sh
 └── README.md
 ```
 
-## API Endpoints
+## 🔧 Setup Instructions
 
-### Health Check
+### 1. Clone the repository
 
-- **GET** `/actuator/health` - Check the health status of the application.
+```bash
+git clone https://github.com/yourusername/books-api.git
+cd books-api
+```
 
-### Books
+### 2. Build and Run
 
-- **GET** `/api/books` - Retrieve all books.
-- **GET** `/api/books/{id}` - Retrieve a specific book by ID.
-- **POST** `/api/books` - Create a new book.
-- **PATCH** `/api/books/{id}` - Update an existing book by ID.
-- **DELETE** `/api/books/{id}` - Delete a book by ID.
+```bash
+mvn clean install
+mvn spring-boot:run
+```
 
-## Setup Instructions
+Your API will run on `http://localhost:8080`.
 
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   ```
+## 🚀 Deployment on AWS with Terraform
 
-2. Navigate to the project directory:
-   ```
-   cd books-api
-   ```
+### Prerequisites
 
-3. Build the project using Maven:
-   ```
-   mvn clean install
-   ```
+* Terraform installed
+* AWS CLI configured with credentials
 
-4. Run the application:
-   ```
-   mvn spring-boot:run
-   ```
+### Deploying with Terraform
 
-5. Access the API at `http://localhost:8080/api/books`.
+```bash
+cd terraform
+terraform init
+terraform apply -var-file="terraform.tfvars"
+```
 
-## Dependencies
+Your API will be deployed to an AWS EC2 instance.
 
-This project uses the following dependencies:
+## ☁️ AWS CloudWatch Monitoring
 
-- Spring Boot Starter Web
-- Spring Boot Starter Actuator
-- Spring Boot Starter Test (for testing)
+AWS CloudWatch is configured for monitoring and logging the API's health and performance metrics. Logs and metrics can be accessed directly through the AWS CloudWatch console.
 
-## License
+## 📖 API Endpoints
 
-This project is licensed under the MIT License.
+| Method | URL                 | Description              |
+| ------ | ------------------- | ------------------------ |
+| GET    | `/api/books`        | Retrieve all books       |
+| GET    | `/api/books/{id}`   | Retrieve a specific book |
+| POST   | `/api/books`        | Create a new book        |
+| PATCH  | `/api/books/{id}`   | Update an existing book  |
+| DELETE | `/api/books/{id}`   | Delete a book            |
+| GET    | `/api/books/health` | Health check             |
+
+## 🎯 Example Requests
+
+**Create a Book:**
+
+```bash
+POST /api/books
+```
+
+Request Body:
+
+```json
+{
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "isbn": "978-0132350884",
+  "publishedYear": 2008
+}
+```
+
+**Validation Error Response:**
+
+```json
+{
+  "timestamp": "2025-05-24T13:45:00.123Z",
+  "status": 400,
+  "errors": [
+    "Title is required",
+    "Author is required"
+  ]
+}
+```
+
+## 📝 Swagger UI
+
+API documentation via Swagger UI is available here:
+
+```
+https://books.zenflixapp.online/swagger-ui/index.html
+```
+
+## ✅ Unit Testing
+
+Tests are written using JUnit 5 and Mockito. To run tests:
+
+```bash
+mvn test
+```
+
+## 🛡️ Logging
+
+Structured logging with levels (`DEBUG`, `INFO`, `WARN`, `ERROR`) provided by SLF4J and Lombok's `@Slf4j`.
+
+Configure log level in `application.properties`:
+
+```properties
+logging.level.com.booksapi=DEBUG
+```
+
+## 📬 Feedback & Contributions
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
+---
+
+⭐ If you found this helpful, consider starring the repository!
