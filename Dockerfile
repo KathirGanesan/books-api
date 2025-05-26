@@ -14,6 +14,9 @@ FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
+# ensure the folder exists and is writable
+RUN mkdir -p /var/log/books-api && chmod 777 /var/log/books-api
+
 COPY --from=builder /app/target/*.jar app.jar
 
 EXPOSE 8080

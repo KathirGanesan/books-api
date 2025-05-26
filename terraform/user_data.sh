@@ -10,6 +10,12 @@ apt install -y docker.io docker-compose nginx ufw curl unzip
 systemctl enable docker
 systemctl start  docker
 
+# Set Docker log driver and options
+cat >/etc/docker/daemon.json <<'EOF'
+{ "log-driver": "json-file", "log-opts": { "max-size": "10m", "max-file": "3" } }
+EOF
+systemctl restart docker
+
 ###############################################################################
 # 1. Docker Compose stack  (backend + frontend)
 ###############################################################################
@@ -26,6 +32,11 @@ services:
     restart: always
     ports:
       - "8080:8080"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   books-ui:
     image: kathirganesan/books-ui:latest      # <- your React-UI image tag
@@ -36,6 +47,14 @@ services:
 EOF
 
 docker-compose up -d
+
+# Deploy the container with log volume mount
+mkdir -p /var/log/books-api
+
+docker run -d --name books-api \
+  -v /var/log/books-api:/var/log/books-api \
+  -p 8080:8080 \
+  kathirganesan/books-api:latest
 
 ###############################################################################
 # 2. Nginx reverse-proxy (Option A-style Swagger paths)
@@ -106,6 +125,12 @@ cat > /opt/aws/amazon-cloudwatch-agent/bin/config.json <<'EOF'
             "file_path": "/var/log/nginx/error.log",
             "log_group_name": "/books-api",
             "log_stream_name": "{instance_id}/nginx-error"
+          },
+          {
+            "file_path": "/var/log/books-api/*.log",
+            "log_group_name": "/books-api-files",
+            "log_stream_name": "{instance_id}/app-file",
+            "retention_in_days": 14
           }
         ]
       }
@@ -117,4 +142,43 @@ EOF
 /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
   -a fetch-config -m ec2 \
   -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
+
+# Write the CloudWatch agent config
+cat >/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'EOF'
+{
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/lib/docker/containers/*/*.log",
+            "log_group_name": "/books-api",
+            "log_stream_name": "{instance_id}/docker",
+            "retention_in_days": 14
+          },
+          {
+            "file_path": "/var/log/nginx/access.log",
+            "log_group_name": "/books-api",
+            "log_stream_name": "{instance_id}/nginx-access"
+          },
+          {
+            "file_path": "/var/log/nginx/error.log",
+            "log_group_name": "/books-api",
+            "log_stream_name": "{instance_id}/nginx-error"
+          },
+          {
+            "file_path": "/var/log/books-api/*.log",
+            "log_group_name": "/books-api-files",
+            "log_stream_name": "{instance_id}/app-file",
+            "retention_in_days": 14
+          }
+        ]
+      }
+    }
+  }
+}
+EOF
+
+systemctl enable amazon-cloudwatch-agent
+systemctl restart amazon-cloudwatch-agent
 
