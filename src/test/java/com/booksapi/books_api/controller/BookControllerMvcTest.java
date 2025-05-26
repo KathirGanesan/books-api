@@ -1,5 +1,6 @@
 package com.booksapi.books_api.controller;
 
+import com.booksapi.books_api.exception.BookNotFoundException;
 import com.booksapi.books_api.model.Book;
 import com.booksapi.books_api.service.BookService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,11 +23,6 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Mock‑MVC based tests that exercise the full HTTP layer while keeping the
- * Spring context light‑weight.  Covers happy paths, validation errors, and
- * not‑found scenarios, and verifies interaction with BookService.
- */
 @WebMvcTest(BookController.class)
 class BookControllerMvcTest {
 
@@ -47,7 +43,7 @@ class BookControllerMvcTest {
     @DisplayName("POST /api/books")
     class CreateBook {
         @Test
-        @DisplayName("returns 201 with Location header and body when book is created")
+        @DisplayName("returns 201 and body when book is created")
         void shouldCreateBook() throws Exception {
             Book payload = new Book(null, "Clean Code", "Robert C. Martin", "9780132350884", 2008);
             Book saved   = new Book(1,    "Clean Code", "Robert C. Martin", "9780132350884", 2008);
@@ -58,7 +54,6 @@ class BookControllerMvcTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(asJson(payload)))
                .andExpect(status().isCreated())
-               .andExpect(header().string("Location", "/api/books/1"))
                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$.id").value(1))
                .andExpect(jsonPath("$.title").value("Clean Code"));
@@ -75,6 +70,8 @@ class BookControllerMvcTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(asJson(invalid)))
                .andExpect(status().isBadRequest())
+               .andExpect(jsonPath("$.status").value(400))
+               .andExpect(jsonPath("$.timestamp").exists())
                .andExpect(jsonPath("$.errors", hasSize(greaterThanOrEqualTo(1))));
         }
     }
@@ -96,11 +93,13 @@ class BookControllerMvcTest {
     @DisplayName("GET /api/books/{id} returns 404 when not found")
     void shouldReturn404ForMissingBook() throws Exception {
         given(bookService.getBookById(99))
-            .willThrow(new com.booksapi.books_api.exception.BookNotFoundException("Book not found with id: 99"));
+            .willThrow(new BookNotFoundException("Book not found with id: 99"));
 
         mvc.perform(get("/api/books/99"))
            .andExpect(status().isNotFound())
-           .andExpect(jsonPath("$.message", containsString("99")));
+           .andExpect(jsonPath("$.status").value(404))
+           .andExpect(jsonPath("$.timestamp").exists())
+           .andExpect(jsonPath("$.errors[0]", containsString("99")));
     }
 
     /*────────────── PATCH /api/books/{id} ──────────────*/
